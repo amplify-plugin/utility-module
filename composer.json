@@ -1,0 +1,29 @@
+{
+    "name": "amplify/utility",
+    "description": "This is a Utility module for amplify",
+    "type": "library",
+    "license": "GPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Hafijul Islam",
+            "email": "hafijul.islam@easyask.com",
+            "role": "Developer"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "ext-gd": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Amplify\\System\\Cms\\": "./"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Amplify\\System\\Utility\\UtilityServiceProvider"
+            ]
+        }
+    }
+}
