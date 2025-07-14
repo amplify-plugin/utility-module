@@ -3,7 +3,7 @@
 namespace Amplify\System\Utility\Http\Controllers;
 
 use Amplify\System\Utility\Models\Export;
-use App\Abstracts\BackpackCustomCrudController;
+use Amplify\System\Abstracts\BackpackCustomCrudController;
 use App\Http\Requests\ExportRequest;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 

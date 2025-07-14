@@ -8,7 +8,7 @@ use Amplify\System\Utility\Models\IcecatTransformationError;
 use Amplify\System\Utility\Models\ImportDefinition;
 use Amplify\System\Utility\Models\ImportJobHistory;
 use App\Exports\ImportJobExport;
-use App\Helpers\DBHelper;
+use Amplify\System\Helpers\DBHelper;
 use App\Imports\ImportJobImport;
 use App\Jobs\ParentImportJob;
 use Carbon\Carbon;

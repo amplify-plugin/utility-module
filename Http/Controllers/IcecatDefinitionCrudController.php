@@ -3,7 +3,7 @@
 namespace Amplify\System\Utility\Http\Controllers;
 
 use Amplify\System\Utility\Models\IcecatDefinition;
-use App\Abstracts\BackpackCustomCrudController;
+use Amplify\System\Abstracts\BackpackCustomCrudController;
 use App\Http\Requests\IcecatDefinitionRequest;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Illuminate\Validation\ValidationException;

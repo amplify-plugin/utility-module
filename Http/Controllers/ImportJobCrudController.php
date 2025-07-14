@@ -5,7 +5,7 @@ namespace Amplify\System\Utility\Http\Controllers;
 use Amplify\System\Utility\Models\ImportDefinition;
 use Amplify\System\Utility\Models\ImportJob;
 use Amplify\System\Utility\Traits\ImportJobTrait;
-use App\Abstracts\BackpackCustomCrudController;
+use Amplify\System\Abstracts\BackpackCustomCrudController;
 use App\Http\Requests\ImportJobRequest;
 use App\Jobs\ParentImportJob;
 use Backpack\CRUD\app\Http\Controllers\Operations\CreateOperation;

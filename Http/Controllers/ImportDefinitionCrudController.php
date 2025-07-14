@@ -3,7 +3,7 @@
 namespace Amplify\System\Utility\Http\Controllers;
 
 use Amplify\System\Utility\Models\ImportDefinition;
-use App\Abstracts\BackpackCustomCrudController;
+use Amplify\System\Abstracts\BackpackCustomCrudController;
 use App\Http\Requests\ImportDefinitionRequest;
 use App\Imports\ImportJobImport;
 use App\Models\Permission;

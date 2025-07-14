@@ -3,7 +3,7 @@
 namespace Amplify\System\Utility\Http\Controllers;
 
 use Amplify\System\Utility\Models\Audit;
-use App\Abstracts\BackpackCustomCrudController;
+use Amplify\System\Abstracts\BackpackCustomCrudController;
 use App\Models\Contact;
 use App\Models\User;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanel;

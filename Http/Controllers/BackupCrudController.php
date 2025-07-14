@@ -2,7 +2,7 @@
 
 namespace Amplify\System\Utility\Http\Controllers;
 
-use App\Abstracts\BackpackCustomCrudController;
+use Amplify\System\Abstracts\BackpackCustomCrudController;
 use App\Traits\ZipperTrait;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Illuminate\Http\Request;

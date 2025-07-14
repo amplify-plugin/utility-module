@@ -4,7 +4,7 @@ namespace Amplify\System\Utility\Http\Controllers;
 
 use Amplify\System\Utility\Models\ScheduledJob;
 use Amplify\System\Utility\Traits\ScheduledJobTrait;
-use App\Abstracts\BackpackCustomCrudController;
+use Amplify\System\Abstracts\BackpackCustomCrudController;
 use App\Http\Requests\ScheduledJobRequest;
 use App\Models\User;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanel;
