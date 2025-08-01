@@ -2,9 +2,9 @@
 
 namespace Amplify\System\Utility\Abstracts;
 
+use Amplify\System\Imports\ImportJobImport;
 use Amplify\System\Utility\Models\ImportDefinition;
 use Amplify\System\Utility\Models\ImportJob;
-use App\Imports\ImportJobImport;
 use App\Jobs\AttributeServiceJob;
 use App\Jobs\CategoryServiceJob;
 use App\Jobs\ProductServiceJob;

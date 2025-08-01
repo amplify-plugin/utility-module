@@ -2,14 +2,14 @@
 
 namespace Amplify\System\Utility\Traits;
 
+use Amplify\System\Imports\ImportJobImport;
 use Amplify\System\Utility\Http\Controllers\ImportJobCrudController;
 use Amplify\System\Utility\Models\DataTransformation;
 use Amplify\System\Utility\Models\DataTransformationError;
 use Amplify\System\Utility\Models\ImportDefinition;
 use Amplify\System\Utility\Models\ImportJobHistory;
-use App\Exports\ImportJobExport;
+use Amplify\System\Exports\ImportJobExport;
 use Amplify\System\Helpers\DBHelper;
-use App\Imports\ImportJobImport;
 use App\Jobs\ParentImportJob;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
