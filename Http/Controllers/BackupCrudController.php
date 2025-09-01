@@ -3,7 +3,7 @@
 namespace Amplify\System\Utility\Http\Controllers;
 
 use Amplify\System\Abstracts\BackpackCustomCrudController;
-use App\Traits\ZipperTrait;
+use Amplify\System\Backend\Traits\ZipperTrait;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
