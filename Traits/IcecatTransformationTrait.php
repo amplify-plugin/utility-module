@@ -2,11 +2,11 @@
 
 namespace Amplify\System\Utility\Traits;
 
+use Amplify\System\Jobs\ExecuteScriptJob;
+use Amplify\System\Jobs\ProcessIcecaProductsInformationJob;
 use Amplify\System\Utility\Models\IcecatDefinition;
 use Amplify\System\Utility\Models\IcecatTransformation;
 use Amplify\System\Utility\Services\IcecatTransformation\ExecuteScriptService;
-use App\Jobs\ExecuteScriptJob;
-use App\Jobs\ProcessIcecaProductsInformationJob;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;

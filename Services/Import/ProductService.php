@@ -2,9 +2,9 @@
 
 namespace Amplify\System\Utility\Services\Import;
 
+use Amplify\System\Jobs\ProductServiceJob;
 use Amplify\System\Utility\Abstracts\ImportService;
 use Amplify\System\Utility\Models\ImportDefinition;
-use App\Jobs\ProductServiceJob;
 use App\Models\AttributeProduct;
 use App\Models\Product;
 use App\Models\ProductImage;

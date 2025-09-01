@@ -3,11 +3,11 @@
 namespace Amplify\System\Utility\Abstracts;
 
 use Amplify\System\Imports\ImportJobImport;
+use Amplify\System\Jobs\AttributeServiceJob;
+use Amplify\System\Jobs\CategoryServiceJob;
+use Amplify\System\Jobs\ProductServiceJob;
 use Amplify\System\Utility\Models\ImportDefinition;
 use Amplify\System\Utility\Models\ImportJob;
-use App\Jobs\AttributeServiceJob;
-use App\Jobs\CategoryServiceJob;
-use App\Jobs\ProductServiceJob;
 use Maatwebsite\Excel\Excel;
 
 /**

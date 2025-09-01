@@ -2,9 +2,9 @@
 
 namespace Amplify\System\Utility\Services\Import;
 
+use Amplify\System\Jobs\CategoryProductServiceJob;
 use Amplify\System\Utility\Abstracts\ImportService;
 use Amplify\System\Utility\Models\ImportDefinition;
-use App\Jobs\CategoryProductServiceJob;
 use Carbon\Carbon;
 
 /**

@@ -2,9 +2,9 @@
 
 namespace Amplify\System\Utility\Services\Import;
 
+use Amplify\System\Jobs\ModelCodeServiceJob;
 use Amplify\System\Utility\Abstracts\ImportService;
 use Amplify\System\Utility\Models\ImportDefinition;
-use App\Jobs\ModelCodeServiceJob;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
