@@ -2,9 +2,9 @@
 
 namespace Amplify\System\Utility\Http\Controllers;
 
-use Amplify\System\Utility\Models\Export;
 use Amplify\System\Abstracts\BackpackCustomCrudController;
-use App\Http\Requests\ExportRequest;
+use Amplify\System\Backend\Http\Requests\ExportRequest;
+use Amplify\System\Utility\Models\Export;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 
 /**
