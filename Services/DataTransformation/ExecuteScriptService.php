@@ -2,7 +2,7 @@
 
 namespace Amplify\System\Utility\Services\DataTransformation;
 
-use App\Models\Product;
+use Amplify\System\Backend\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;

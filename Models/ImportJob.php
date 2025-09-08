@@ -2,7 +2,6 @@
 
 namespace Amplify\System\Utility\Models;
 
-use App\Models\User;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -82,7 +81,7 @@ class ImportJob extends Model implements Auditable
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(\Amplify\System\Backend\Models\User::class);
     }
 
     /*

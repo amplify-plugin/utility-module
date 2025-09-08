@@ -4,9 +4,9 @@ namespace Amplify\System\Utility\Http\Controllers;
 
 use Amplify\System\Abstracts\BackpackCustomCrudController;
 use Amplify\System\Backend\Http\Requests\ImportDefinitionRequest;
+use Amplify\System\Backend\Models\Permission;
 use Amplify\System\Imports\ImportJobImport;
 use Amplify\System\Utility\Models\ImportDefinition;
-use App\Models\Permission;
 use Backpack\CRUD\app\Http\Controllers\Operations\CreateOperation;
 use Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
 use Backpack\CRUD\app\Http\Controllers\Operations\InlineCreateOperation;

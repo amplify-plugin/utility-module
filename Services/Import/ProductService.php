@@ -2,12 +2,12 @@
 
 namespace Amplify\System\Utility\Services\Import;
 
+use Amplify\System\Backend\Models\AttributeProduct;
+use Amplify\System\Backend\Models\Product;
+use Amplify\System\Backend\Models\ProductImage;
 use Amplify\System\Jobs\ProductServiceJob;
 use Amplify\System\Utility\Abstracts\ImportService;
 use Amplify\System\Utility\Models\ImportDefinition;
-use App\Models\AttributeProduct;
-use App\Models\Product;
-use App\Models\ProductImage;
 use Carbon\Carbon;
 
 /**

@@ -2,10 +2,10 @@
 
 namespace Amplify\System\Utility\Http\Controllers;
 
-use Amplify\System\Utility\Models\Audit;
 use Amplify\System\Abstracts\BackpackCustomCrudController;
-use App\Models\Contact;
-use App\Models\User;
+use Amplify\System\Backend\Models\Contact;
+use Amplify\System\Backend\Models\User;
+use Amplify\System\Utility\Models\Audit;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanel;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 

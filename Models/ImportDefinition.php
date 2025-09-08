@@ -2,7 +2,7 @@
 
 namespace Amplify\System\Utility\Models;
 
-use App\Models\User;
+use Amplify\System\Backend\Models\User;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

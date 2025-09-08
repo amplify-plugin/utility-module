@@ -2,10 +2,10 @@
 
 namespace Amplify\System\Utility\Traits;
 
+use Amplify\System\Backend\Models\Category;
 use Amplify\System\Jobs\DataTransformationParentJob;
 use Amplify\System\Utility\Models\DataTransformation;
 use Amplify\System\Utility\Services\DataTransformation\ExecuteScriptService;
-use App\Models\Category;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
