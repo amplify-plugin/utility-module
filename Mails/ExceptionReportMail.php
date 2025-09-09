@@ -27,8 +27,8 @@ class ExceptionReportMail extends Mailable
      */
     public function build()
     {
-        return $this->view('emails.exception_email')
-            ->subject(config('app.name').' Error Exception Notification')
+        return $this->view('backend::emails.exception')
+            ->subject(config('app.name').' Exception Notification')
             ->with('content', $this->content);
     }
 }
