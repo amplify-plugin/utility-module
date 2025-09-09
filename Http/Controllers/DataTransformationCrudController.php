@@ -144,7 +144,7 @@ class DataTransformationCrudController extends BackpackCustomCrudController
         $this->data['appliesToOptions'] = DataTransformationHelper::getAppliesToOptions();
         $this->data['runWhenOptions'] = DataTransformationHelper::getRunWhenOptions();
 
-        $this->crud->setCreateView('crud::pages.data_transformation.create');
+        $this->crud->setCreateView('backend::pages.data_transformation.create');
 
         CRUD::addField([
             'name' => 'transformation_name',
@@ -204,7 +204,7 @@ class DataTransformationCrudController extends BackpackCustomCrudController
     {
         $this->data['dataTransformationData'] = $this->crud->getCurrentEntry();
 
-        $this->crud->setUpdateView('crud::pages.data_transformation.create');
+        $this->crud->setUpdateView('backend::pages.data_transformation.create');
 
         $this->setupCreateOperation();
     }

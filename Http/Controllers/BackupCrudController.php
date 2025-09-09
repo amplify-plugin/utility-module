@@ -86,7 +86,7 @@ class BackupCrudController extends BackpackCustomCrudController
 
         $this->crud->setSubheading('Showing all entries on backups disks');
 
-        $this->crud->setListView('crud::pages.backup.list');
+        $this->crud->setListView('backend::pages.backup.list');
     }
 
     public function create(Request $request): \Illuminate\Http\Response|string

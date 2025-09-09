@@ -147,7 +147,7 @@ class ImportJobCrudController extends BackpackCustomCrudController
 
         $this->data['importDefinition'] = $this->fetchImportDefinition()->getData();
 
-        $this->crud->setCreateView('crud::pages.import.create');
+        $this->crud->setCreateView('backend::pages.import.create');
 
         CRUD::addField([
             'name' => 'import_definition_id',
@@ -233,7 +233,7 @@ class ImportJobCrudController extends BackpackCustomCrudController
     {
         $this->data['importJobData'] = $this->crud->getCurrentEntry();
 
-        $this->crud->setUpdateView('crud::pages.import.create');
+        $this->crud->setUpdateView('backend::pages.import.create');
 
         $this->setupCreateOperation();
     }

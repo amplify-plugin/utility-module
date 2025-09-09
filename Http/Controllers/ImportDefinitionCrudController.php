@@ -215,7 +215,7 @@ class ImportDefinitionCrudController extends BackpackCustomCrudController
         $this->data['attributes'] = getAllAttributes();
         $this->data['tables_name'] = config('import.tables_name');
 
-        $this->crud->setUpdateView('crud::pages.import.import-definition.create');
+        $this->crud->setUpdateView('backend::pages.import.import-definition.create');
         $this->setupCreateOperation();
     }
 
@@ -311,7 +311,7 @@ class ImportDefinitionCrudController extends BackpackCustomCrudController
         CRUD::setValidation(ImportDefinitionRequest::class);
         // $this->data['translatable'] = array_keys($this->crud->model->translations);
         $this->data['all_hierarchies'] = getHierarchies();
-        $this->crud->setCreateView('crud::pages.import.import-definition.create');
+        $this->crud->setCreateView('backend::pages.import.import-definition.create');
         $this->formFields();
     }
 

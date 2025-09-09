@@ -40,7 +40,7 @@ trait IcecatTransformationTrait
     // function to show the test blade
     public function loadTestBlade(IcecatTransformation $dataTransformation)
     {
-        return view('crud::pages.data_transformation.test_script', [
+        return view('backend::pages.data_transformation.test_script', [
             'dataTransformation' => $dataTransformation,
         ]);
     }
@@ -58,7 +58,7 @@ trait IcecatTransformationTrait
                 : json_encode([]))
             : json_encode([]);
 
-        return view('crud::pages.data_transformation.run_script', [
+        return view('backend::pages.data_transformation.run_script', [
             'dataTransformation' => $dataTransformation,
             'categories' => $categories,
         ]);

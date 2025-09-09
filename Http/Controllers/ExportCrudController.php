@@ -41,7 +41,7 @@ class ExportCrudController extends BackpackCustomCrudController
      */
     protected function setupListOperation()
     {
-        $this->crud->setListView('crud::pages.under-construction');
+        $this->crud->setListView('backend::pages.under-construction');
 
         /**
          * Columns can be defined using the fluent syntax or array syntax:

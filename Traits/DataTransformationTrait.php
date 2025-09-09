@@ -36,7 +36,7 @@ trait DataTransformationTrait
     // function to show the test blade
     public function loadTestBlade(DataTransformation $dataTransformation)
     {
-        return view('crud::pages.data_transformation.test_script', [
+        return view('backend::pages.data_transformation.test_script', [
             'dataTransformation' => $dataTransformation,
         ]);
     }
@@ -54,7 +54,7 @@ trait DataTransformationTrait
                 : json_encode([]))
             : json_encode([]);
 
-        return view('crud::pages.data_transformation.run_script', [
+        return view('backend::pages.data_transformation.run_script', [
             'dataTransformation' => $dataTransformation,
             'categories' => $categories,
         ]);

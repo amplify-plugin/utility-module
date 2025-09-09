@@ -171,7 +171,7 @@ class IcecatTransformationCrudController extends BackpackCustomCrudController
         $this->data['runWhenOptions'] = IcecatTransformationHelper::getRunWhenOptions();
         $this->data['transformationNames'] = IcecatTransformationHelper::getTransformationNames();
 
-        $this->crud->setCreateView('crud::pages.icecat_transformation.run_script');
+        $this->crud->setCreateView('backend::pages.icecat_transformation.run_script');
 
         CRUD::addField([
             'name' => 'name',

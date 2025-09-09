@@ -79,7 +79,7 @@ class JobCrudController extends BackpackCustomCrudController
             'value' => function ($failedJob) {
                 $payload = $failedJob->payload;
 
-                return view('crud::partials.job', compact('payload'))->render();
+                return view('backend::partials.job', compact('payload'))->render();
             },
         ]);
 
