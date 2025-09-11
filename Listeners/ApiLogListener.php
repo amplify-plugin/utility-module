@@ -39,7 +39,7 @@ class ApiLogListener
         // Search Logger
         $search_config = config('amplify.search.easyask_host');
         if ($api_host == $search_config) {
-            if (! config('amplify.search.logger_enabled')) {
+            if (! config('amplify.log_search')) {
                 return;
             }
         }
