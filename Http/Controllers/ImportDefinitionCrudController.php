@@ -274,7 +274,7 @@ class ImportDefinitionCrudController extends BackpackCustomCrudController
 
     public function getDBColumns($importType): array
     {
-        $model = "\App\Models\\$importType";
+        $model = "\Amplify\System\Backend\Models\\$importType";
         $ignoreId = false;
         if ($importType === 'CategoryProduct') {
             $ignoreId = true;
