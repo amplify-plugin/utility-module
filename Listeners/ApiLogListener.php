@@ -39,7 +39,7 @@ class ApiLogListener
         // Search Logger
         $search_config = config('amplify.search.easyask_host');
         if ($api_host == $search_config) {
-            if (! config('amplify.log_search')) {
+            if (! config('amplify.developer.log_search')) {
                 return;
             }
         }
@@ -47,7 +47,7 @@ class ApiLogListener
         // Report Logger
         $report_config = config('amplify.report.host');
         if ($api_host == $report_config) {
-            if (! config('amplify.report.logger_enabled')) {
+            if (! config('amplify.developer.log_search')) {
                 return;
             }
         }
@@ -56,7 +56,7 @@ class ApiLogListener
         $payment_config = config('amplify.payment.gateways.'.config('amplify.payment.default').'.payment_url');
         $payment_config = $this->getHostFromUri($payment_config);
         if ($api_host == $payment_config) {
-            if (! config('amplify.payment.logger_enabled')) {
+            if (! config('amplify.developer.log_payment')) {
                 return;
             }
         }
@@ -65,7 +65,7 @@ class ApiLogListener
         $erp_config = config('amplify.erp.configurations.'.config('amplify.erp.default').'.url');
         $erp_config = $this->getHostFromUri($erp_config);
         if ($api_host == $erp_config) {
-            if (! config('amplify.erp.logger_enabled')) {
+            if (! config('amplify.developer.log_erp_api')) {
                 return;
             }
         }

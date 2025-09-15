@@ -16,7 +16,7 @@ class MailLogListener
      */
     public function handle($event)
     {
-        if (! config('mail.logger_enabled')) {
+        if (! config('amplify.developer.log_email')) {
             return;
         }
 
