@@ -343,7 +343,7 @@ class ImportDefinitionCrudController extends BackpackCustomCrudController
             'name' => 'column_mapping',
             'type' => 'custom_html',
             'value' => function ($model) {
-                $script = '<script src="'.mix('/js/app.js').'"></script>';
+                $script = '<script src="'.asset('/js/app.js').'"></script>';
 
                 $data =
                     '<div class="rounded border" style="max-height: 350px !important; overflow-y: auto !important;"><table class="table mb-0">';
