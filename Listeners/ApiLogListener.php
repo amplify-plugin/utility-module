@@ -37,7 +37,7 @@ class ApiLogListener
         $api_host = $this->request->toPsrRequest()->getUri()->getHost();
 
         // Search Logger
-        $search_config = config('amplify.search.easyask_host');
+        $search_config = config('amplify.sayt.dictionary.host');
         if ($api_host == $search_config) {
             if (! config('amplify.developer.log_search')) {
                 return;

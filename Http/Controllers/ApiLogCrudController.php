@@ -52,7 +52,7 @@ class ApiLogCrudController extends BackpackCustomCrudController
                 'OPTION' => 'OPTION',
             ],
             'group' => [
-                config('amplify.search.easyask_host') => config('amplify.search.easyask_host'),
+                config('amplify.sayt.dictionary.host') => config('amplify.sayt.dictionary.host'),
                 config('amplify.report.host') => config('amplify.report.host'),
                 $erp_host => $erp_host,
                 'www.cenpos.net' => 'www.cenpos.net',
