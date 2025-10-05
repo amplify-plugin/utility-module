@@ -64,7 +64,7 @@ abstract class ImportService
         $this->column_mapping = json_decode($this->importDefinition->column_mapping);
 
         if (! in_array($this->importDefinition->import_type, ['ContactPermissions'])) {
-            $this->model = "App\Models\\".$this->importDefinition->import_type;
+            $this->model = "Amplify\System\Backend\Models\\".$this->importDefinition->import_type;
             $this->modelInstance = new $this->model;
         }
 
