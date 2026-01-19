@@ -56,6 +56,7 @@ class ApiLogCrudController extends BackpackCustomCrudController
                 config('amplify.report.host') => config('amplify.report.host'),
                 $erp_host => $erp_host,
                 'www.cenpos.net' => 'www.cenpos.net',
+                'api.navigator.traceparts.com' => 'api.navigator.traceparts.com',
             ],
             'code' => [
                 '200' => '200',

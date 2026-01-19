@@ -6,6 +6,7 @@ use Amplify\System\Utility\Models\ApiLog;
 use Illuminate\Http\Client\Events\ConnectionFailed;
 use Illuminate\Http\Client\Events\ResponseReceived;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Log;
 
 class ApiLogListener
 {
@@ -68,6 +69,11 @@ class ApiLogListener
             if (! config('amplify.developer.log_erp_api')) {
                 return;
             }
+        }
+
+        // Trace-parts Logger
+        if ($api_host === 'api.navigator.traceparts.com' && (! config('amplify.developer.log_trace_parts_api'))) {
+            return;
         }
 
         $this->apiLog->group = $this->request->toPsrRequest()->getUri()->getHost();
