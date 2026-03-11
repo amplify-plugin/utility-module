@@ -6,17 +6,19 @@ use Amplify\System\Utility\Models\MailLog;
 use Amplify\System\Abstracts\BackpackCustomCrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Illuminate\Support\Facades\Route;
+use Backpack\CRUD\app\Http\Controllers\CrudController;
 
 /**
  * Class MailLogCrudController
  *
  * @property-read \Backpack\CRUD\app\Library\CrudPanel\CrudPanel $crud
  */
-class MailLogCrudController extends BackpackCustomCrudController
+class MailLogCrudController extends CrudController
 {
     use \Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\ListOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\ShowOperation;
+    use \Backpack\CRUD\app\Http\Controllers\Operations\BulkDeleteOperation;
 
     /**
      * Configure the CrudPanel object. Apply settings to all operations.
@@ -29,6 +31,11 @@ class MailLogCrudController extends BackpackCustomCrudController
         CRUD::setRoute(config('backpack.base.route_prefix').'/mail-log');
         CRUD::setEntityNameStrings('mail-log', 'mail logs');
 
+        if (!backpack_user()->isAdmin()) {
+            $this->crud->denyAccess('list');
+            $this->crud->denyAccess('show');
+            $this->crud->denyAccess('delete');
+        }
     }
 
     protected function setupCustomRoutes($segment, $routeName, $controller): void

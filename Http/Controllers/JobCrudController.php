@@ -4,18 +4,24 @@ namespace Amplify\System\Utility\Http\Controllers;
 
 use Amplify\System\Utility\Models\Job;
 use Amplify\System\Abstracts\BackpackCustomCrudController;
+use Backpack\CRUD\app\Http\Controllers\Operations\BulkDeleteOperation;
+use Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
+use Backpack\CRUD\app\Http\Controllers\Operations\ListOperation;
+use Backpack\CRUD\app\Http\Controllers\Operations\ShowOperation;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
+use Backpack\CRUD\app\Http\Controllers\CrudController;
 
 /**
  * Class JobCrudController
  *
  * @property-read \Backpack\CRUD\app\Library\CrudPanel\CrudPanel $crud
  */
-class JobCrudController extends BackpackCustomCrudController
+class JobCrudController extends CrudController
 {
-    use \Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
-    use \Backpack\CRUD\app\Http\Controllers\Operations\ListOperation;
-    use \Backpack\CRUD\app\Http\Controllers\Operations\ShowOperation;
+    use DeleteOperation;
+    use ListOperation;
+    use ShowOperation;
+    use BulkDeleteOperation;
 
     /**
      * Configure the CrudPanel object. Apply settings to all operations.
@@ -27,6 +33,12 @@ class JobCrudController extends BackpackCustomCrudController
         CRUD::setModel(Job::class);
         CRUD::setRoute(config('backpack.base.route_prefix').'/job');
         CRUD::setEntityNameStrings('job', 'jobs');
+
+        if (!backpack_user()->isAdmin()) {
+            $this->crud->denyAccess('list');
+            $this->crud->denyAccess('show');
+            $this->crud->denyAccess('delete');
+        }
     }
 
     /**

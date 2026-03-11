@@ -4,6 +4,7 @@ namespace Amplify\System\Utility\Http\Controllers;
 
 use Amplify\System\Utility\Models\FailedJob;
 use Amplify\System\Abstracts\BackpackCustomCrudController;
+use Backpack\CRUD\app\Http\Controllers\Operations\BulkDeleteOperation;
 use Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
 use Backpack\CRUD\app\Http\Controllers\Operations\ListOperation;
 use Backpack\CRUD\app\Http\Controllers\Operations\ShowOperation;
@@ -12,17 +13,19 @@ use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Redirect;
 use Prologue\Alerts\Facades\Alert;
+use Backpack\CRUD\app\Http\Controllers\CrudController;
 
 /**
  * Class FailedJobCrudController
  *
  * @property-read CrudPanel $crud
  */
-class FailedJobCrudController extends BackpackCustomCrudController
+class FailedJobCrudController extends CrudController
 {
     use DeleteOperation;
     use ListOperation;
     use ShowOperation;
+    use BulkDeleteOperation;
 
     /**
      * Configure the CrudPanel object. Apply settings to all operations.
@@ -34,6 +37,12 @@ class FailedJobCrudController extends BackpackCustomCrudController
         CRUD::setModel(FailedJob::class);
         CRUD::setRoute(config('backpack.base.route_prefix').'/failed-job');
         CRUD::setEntityNameStrings('failed-job', 'failed jobs');
+
+        if (!backpack_user()->isAdmin()) {
+            $this->crud->denyAccess('list');
+            $this->crud->denyAccess('show');
+            $this->crud->denyAccess('delete');
+        }
     }
 
     /**

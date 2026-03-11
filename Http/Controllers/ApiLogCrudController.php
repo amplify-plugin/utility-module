@@ -5,13 +5,14 @@ namespace Amplify\System\Utility\Http\Controllers;
 use Amplify\System\Utility\Models\ApiLog;
 use Amplify\System\Abstracts\BackpackCustomCrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
+use Backpack\CRUD\app\Http\Controllers\CrudController;
 
 /**
  * Class ApiLogCrudController
  *
  * @property-read \Backpack\CRUD\app\Library\CrudPanel\CrudPanel $crud
  */
-class ApiLogCrudController extends BackpackCustomCrudController
+class ApiLogCrudController extends CrudController
 {
     use \Backpack\CRUD\app\Http\Controllers\Operations\BulkDeleteOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
@@ -28,6 +29,12 @@ class ApiLogCrudController extends BackpackCustomCrudController
         CRUD::setModel(ApiLog::class);
         CRUD::setRoute(config('backpack.base.route_prefix').'/api-log');
         CRUD::setEntityNameStrings('api-log', 'api logs');
+
+        if (!backpack_user()->isAdmin()) {
+            $this->crud->denyAccess('list');
+            $this->crud->denyAccess('show');
+            $this->crud->denyAccess('delete');
+        }
     }
 
     /**
