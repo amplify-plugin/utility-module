@@ -24,6 +24,8 @@ Route::group([
     Route::crud('import-job', 'ImportJobCrudController');
     Route::post('import-job/upload-file', 'ImportJobCrudController@handleUploadFile');
     Route::crud('export', 'ExportCrudController');
+    Route::post('export/products/download', 'ExportCrudController@downloadProducts')->name('admin.export.products.download');
+    Route::post('export/manufacturers/download', 'ExportCrudController@downloadManufacturers')->name('admin.export.manufacturers.download');
     Route::crud('scheduled-job', 'ScheduledJobCrudController');
     Route::get('scheduled-job/run-now/{id}', 'ScheduledJobCrudController@runNow');
     Route::crud('backup', 'BackupCrudController');
