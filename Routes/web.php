@@ -26,6 +26,10 @@ Route::group([
     Route::crud('export', 'ExportCrudController');
     Route::post('export/products/download', 'ExportCrudController@downloadProducts')->name('admin.export.products.download');
     Route::post('export/manufacturers/download', 'ExportCrudController@downloadManufacturers')->name('admin.export.manufacturers.download');
+    Route::post('export/sql/preview', 'ExportCrudController@previewSql')->name('admin.export.sql.preview');
+    Route::post('export/sql/download', 'ExportCrudController@downloadSql')->name('admin.export.sql.download');
+    Route::get('export/sql/history', 'ExportCrudController@sqlHistory')->name('admin.export.sql.history');
+    Route::delete('export/sql/history/{id}', 'ExportCrudController@deleteSqlHistory')->name('admin.export.sql.history.delete');
     Route::crud('scheduled-job', 'ScheduledJobCrudController');
     Route::get('scheduled-job/run-now/{id}', 'ScheduledJobCrudController@runNow');
     Route::crud('backup', 'BackupCrudController');

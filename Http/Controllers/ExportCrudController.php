@@ -8,7 +8,11 @@ use Amplify\System\Backend\Models\Product;
 use Amplify\System\Utility\Models\Export;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -92,13 +96,7 @@ class ExportCrudController extends BackpackCustomCrudController
                 $selectedColumns
             ));
 
-            $query = Product::query()
-                ->with([
-                    'manufacturerRelation',
-                    'brand',
-                    'categories',
-                    'productClassification',
-                ]);
+            $query = Product::query();
 
             $this->applyProductExportConditions($query, $request);
 
@@ -165,6 +163,139 @@ class ExportCrudController extends BackpackCustomCrudController
         ]);
     }
 
+    public function previewSql(Request $request): JsonResponse
+    {
+        $rawSql = (string) $request->input('sql', '');
+        $limit = max(1, min(100, (int) $request->input('limit', 25)));
+
+        $validation = $this->validateSelectSql($rawSql);
+        if (! $validation['valid']) {
+            return response()->json([
+                'valid' => false,
+                'message' => $validation['message'],
+                'columns' => [],
+                'rows' => [],
+            ], 422);
+        }
+
+        try {
+            $previewSql = 'SELECT * FROM ('.$validation['sql'].') AS export_preview LIMIT '.$limit;
+            $rows = array_map(
+                static fn ($row) => (array) $row,
+                DB::select($previewSql)
+            );
+
+            $historyItem = $this->saveSqlHistory($validation['sql']);
+
+            return response()->json([
+                'valid' => true,
+                'message' => 'SQL is valid. Preview generated successfully.',
+                'columns' => ! empty($rows) ? array_keys($rows[0]) : [],
+                'rows' => $rows,
+                'history' => $historyItem,
+            ]);
+        } catch (\Throwable $exception) {
+            return response()->json([
+                'valid' => false,
+                'message' => $exception->getMessage(),
+                'columns' => [],
+                'rows' => [],
+            ], 422);
+        }
+    }
+
+    public function downloadSql(Request $request): StreamedResponse
+    {
+        $rawSql = (string) $request->input('sql', '');
+
+        $validation = $this->validateSelectSql($rawSql);
+        if (! $validation['valid']) {
+            abort(422, $validation['message']);
+        }
+
+        $fileName = 'sql-export-'.now()->format('Y-m-d_His').'.csv';
+        $wrappedSql = 'SELECT * FROM ('.$validation['sql'].') AS export_source';
+
+        return response()->streamDownload(function () use ($wrappedSql) {
+            $output = fopen('php://output', 'w');
+            fwrite($output, "\xEF\xBB\xBF");
+
+            $statement = DB::connection()->getPdo()->prepare($wrappedSql);
+            $statement->execute();
+
+            $headerWritten = false;
+            while ($row = $statement->fetch(\PDO::FETCH_ASSOC)) {
+                if (! $headerWritten) {
+                    fputcsv($output, array_keys($row));
+                    $headerWritten = true;
+                }
+
+                fputcsv($output, array_values($row));
+            }
+
+            fclose($output);
+        }, $fileName, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    public function sqlHistory(Request $request): JsonResponse
+    {
+        $limit = max(1, min(100, (int) $request->input('limit', 20)));
+
+        $query = Export::query();
+        if ($this->hasExportColumn('type')) {
+            $query->where('type', 'sql');
+        }
+
+        if ($this->hasExportColumn('query_text')) {
+            $query->whereNotNull('query_text');
+            $selectColumns = ['id', 'name', 'query_text', 'updated_at'];
+        } else {
+            $selectColumns = ['id', 'name', 'updated_at'];
+        }
+
+        if ($this->hasExportColumn('last_used_at')) {
+            $query->orderByDesc('last_used_at');
+            $selectColumns[] = 'last_used_at';
+        }
+
+        $items = $query
+            ->orderByDesc('updated_at')
+            ->limit($limit)
+            ->get($selectColumns)
+            ->map(function (Export $item) {
+                return [
+                    'id' => $item->id,
+                    'name' => $item->name,
+                    'query' => $item->query_text ?: $item->name,
+                    'last_used_at' => optional($item->last_used_at)->format('Y-m-d H:i:s'),
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'items' => $items,
+        ]);
+    }
+
+    public function deleteSqlHistory(int $id): JsonResponse
+    {
+        $query = Export::query();
+        if ($this->hasExportColumn('type')) {
+            $query->where('type', 'sql');
+        }
+
+        $record = $query->findOrFail($id);
+
+        $record->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'History query removed successfully.',
+        ]);
+    }
+
     /**
      * @return array<string, array{label: string, selected_by_default?: bool}>
      */
@@ -212,75 +343,23 @@ class ExportCrudController extends BackpackCustomCrudController
      */
     protected function productExportColumns(): array
     {
-        return [
-            'id' => [
-                'label' => 'ID',
-                'selected_by_default' => true,
-            ],
-            'product_code' => [
-                'label' => 'Product Code',
-                'selected_by_default' => true,
-            ],
-            'product_name' => [
-                'label' => 'Product Name',
-                'selected_by_default' => true,
-            ],
-            'local_product_name' => [
-                'label' => 'Localized Product Name',
-            ],
-            'model_name' => [
-                'label' => 'Model Name',
-            ],
-            'local_model_name' => [
-                'label' => 'Localized Model Name',
-            ],
-            'short_description' => [
-                'label' => 'Short Description',
-            ],
-            'local_short_description' => [
-                'label' => 'Localized Short Description',
-            ],
-            'description' => [
-                'label' => 'Description',
-            ],
-            'local_description' => [
-                'label' => 'Localized Description',
-            ],
-            'product_type' => [
-                'label' => 'Product Type',
-            ],
-            'status' => [
-                'label' => 'Status',
-                'selected_by_default' => true,
-            ],
-            'selling_price' => [
-                'label' => 'Selling Price',
-                'selected_by_default' => true,
-            ],
-            'msrp' => [
-                'label' => 'MSRP',
-            ],
-            'manufacturer' => [
-                'label' => 'Manufacturer',
-                'selected_by_default' => true,
-            ],
-            'brand' => [
-                'label' => 'Brand',
-            ],
-            'categories' => [
-                'label' => 'Categories',
-                'selected_by_default' => true,
-            ],
-            'product_classification' => [
-                'label' => 'Product Classification',
-            ],
-            'created_at' => [
-                'label' => 'Created At',
-            ],
-            'updated_at' => [
-                'label' => 'Updated At',
-            ],
-        ];
+        $product = new Product;
+        $table = $product->getTable();
+        $columnNames = Schema::getColumnListing($table);
+        $defaultSelectedColumns = ['id', 'product_code', 'product_name', 'status', 'selling_price'];
+
+        $columns = [];
+        foreach ($columnNames as $columnName) {
+            $columns[$columnName] = [
+                'label' => $this->formatExportLabel($columnName),
+            ];
+
+            if (in_array($columnName, $defaultSelectedColumns, true)) {
+                $columns[$columnName]['selected_by_default'] = true;
+            }
+        }
+
+        return $columns;
     }
 
     /**
@@ -288,77 +367,44 @@ class ExportCrudController extends BackpackCustomCrudController
      */
     protected function manufacturerExportColumns(): array
     {
-        return [
-            'id' => [
-                'label' => 'ID',
-                'selected_by_default' => true,
-            ],
-            'code' => [
-                'label' => 'Code',
-                'selected_by_default' => true,
-            ],
-            'name' => [
-                'label' => 'Name',
-                'selected_by_default' => true,
-            ],
-            'contact_name' => [
-                'label' => 'Contact Name',
-            ],
-            'contact_email' => [
-                'label' => 'Contact Email',
-            ],
-            'contact_phone' => [
-                'label' => 'Contact Phone',
-            ],
-            'contact_address' => [
-                'label' => 'Contact Address',
-            ],
-            'image' => [
-                'label' => 'Image',
-            ],
-            'status' => [
-                'label' => 'Status',
-                'selected_by_default' => true,
-            ],
-            'created_at' => [
-                'label' => 'Created At',
-            ],
-            'updated_at' => [
-                'label' => 'Updated At',
-            ],
-        ];
+        $manufacturer = new Manufacturer;
+        $table = $manufacturer->getTable();
+        $columnNames = Schema::getColumnListing($table);
+        $defaultSelectedColumns = ['id', 'code', 'name'];
+
+        $columns = [];
+        foreach ($columnNames as $columnName) {
+            $columns[$columnName] = [
+                'label' => $this->formatExportLabel($columnName),
+            ];
+
+            if (in_array($columnName, $defaultSelectedColumns, true)) {
+                $columns[$columnName]['selected_by_default'] = true;
+            }
+        }
+
+        return $columns;
     }
 
     /**
      */
     protected function resolveProductExportValue(Product $product, string $columnKey): string
     {
-        return match ($columnKey) {
-            'id' => (string) $product->id,
-            'product_code' => (string) ($product->product_code ?? ''),
-            'product_name' => (string) ($product->product_name ?? ''),
-            'local_product_name' => (string) ($product->local_product_name ?? ''),
-            'model_name' => (string) ($product->model_name ?? ''),
-            'local_model_name' => (string) ($product->local_model_name ?? ''),
-            'short_description' => (string) ($product->short_description ?? ''),
-            'local_short_description' => (string) ($product->local_short_description ?? ''),
-            'description' => (string) ($product->description ?? ''),
-            'local_description' => (string) ($product->local_description ?? ''),
-            'product_type' => (string) ($product->product_type ?? ''),
-            'status' => (string) ($product->status ?? ''),
-            'selling_price' => (string) ($product->selling_price ?? ''),
-            'msrp' => (string) ($product->msrp ?? ''),
-            'manufacturer' => (string) ($product->manufacturerRelation?->name ?? ''),
-            'brand' => (string) ($product->brand?->title ?? ''),
-            'categories' => (string) $product->categories
-                ->pluck('category_name')
-                ->filter()
-                ->implode(', '),
-            'product_classification' => (string) ($product->productClassification?->title ?? ''),
-            'created_at' => optional($product->created_at)->format('Y-m-d H:i:s') ?? '',
-            'updated_at' => optional($product->updated_at)->format('Y-m-d H:i:s') ?? '',
-            default => '',
-        };
+        $value = $product->getAttribute($columnKey);
+
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d H:i:s');
+        }
+
+        if (is_bool($value)) {
+            return $value ? '1' : '0';
+        }
+
+        if (is_array($value) || is_object($value)) {
+            return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '';
+        }
+
+        return (string) ($value ?? '');
     }
 
     protected function applyProductExportConditions(Builder $query, Request $request): Builder
@@ -399,19 +445,156 @@ class ExportCrudController extends BackpackCustomCrudController
 
     protected function resolveManufacturerExportValue(Manufacturer $manufacturer, string $columnKey): string
     {
-        return match ($columnKey) {
-            'id' => (string) $manufacturer->id,
-            'code' => (string) ($manufacturer->code ?? ''),
-            'name' => (string) ($manufacturer->name ?? ''),
-            'contact_name' => (string) ($manufacturer->contact_name ?? ''),
-            'contact_email' => (string) ($manufacturer->contact_email ?? ''),
-            'contact_phone' => (string) ($manufacturer->contact_phone ?? ''),
-            'contact_address' => (string) ($manufacturer->contact_address ?? ''),
-            'image' => (string) ($manufacturer->image ?? ''),
-            'status' => $manufacturer->archived_at ? 'Archived' : 'Published',
-            'created_at' => optional($manufacturer->created_at)->format('Y-m-d H:i:s') ?? '',
-            'updated_at' => optional($manufacturer->updated_at)->format('Y-m-d H:i:s') ?? '',
-            default => '',
-        };
+        $value = $manufacturer->getAttribute($columnKey);
+
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d H:i:s');
+        }
+
+        if (is_bool($value)) {
+            return $value ? '1' : '0';
+        }
+
+        if (is_array($value) || is_object($value)) {
+            return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '';
+        }
+
+        return (string) ($value ?? '');
+    }
+
+    /**
+     * @return array{valid: bool, message: string, sql: string}
+     */
+    protected function validateSelectSql(string $sql): array
+    {
+        $cleanSql = trim($sql);
+
+        if ($cleanSql === '') {
+            return [
+                'valid' => false,
+                'message' => 'SQL query is required.',
+                'sql' => '',
+            ];
+        }
+
+        $cleanSql = preg_replace('/\/\*.*?\*\//s', '', $cleanSql) ?? $cleanSql;
+        $cleanSql = preg_replace('/^\s*--.*$/m', '', $cleanSql) ?? $cleanSql;
+        $cleanSql = trim($cleanSql);
+
+        $statementSql = rtrim($cleanSql, " \t\n\r\0\x0B;");
+
+        if ($statementSql === '') {
+            return [
+                'valid' => false,
+                'message' => 'SQL query is empty after cleanup.',
+                'sql' => '',
+            ];
+        }
+
+        if (str_contains($statementSql, ';')) {
+            return [
+                'valid' => false,
+                'message' => 'Only one SQL statement is allowed.',
+                'sql' => '',
+            ];
+        }
+
+        if (! preg_match('/^\s*(select|with)\b/i', $statementSql)) {
+            return [
+                'valid' => false,
+                'message' => 'Only SELECT queries are supported.',
+                'sql' => '',
+            ];
+        }
+
+        if (preg_match('/\b(insert|update|delete|drop|alter|truncate|create|rename|replace|grant|revoke|call|set)\b/i', $statementSql)) {
+            return [
+                'valid' => false,
+                'message' => 'Only SELECT queries are supported.',
+                'sql' => '',
+            ];
+        }
+
+        if (preg_match('/\binto\s+outfile\b/i', $statementSql)) {
+            return [
+                'valid' => false,
+                'message' => 'INTO OUTFILE is not allowed.',
+                'sql' => '',
+            ];
+        }
+
+        return [
+            'valid' => true,
+            'message' => 'Valid SELECT query.',
+            'sql' => $statementSql,
+        ];
+    }
+
+    /**
+     * @return array{id: int, name: string, query: string, last_used_at: string}
+     */
+    protected function saveSqlHistory(string $sql): array
+    {
+        $name = Str::limit(preg_replace('/\s+/', ' ', trim($sql)) ?? 'SQL Query', 120, '...');
+        $hasQueryHash = $this->hasExportColumn('query_hash');
+        $hasType = $this->hasExportColumn('type');
+        $hasQueryText = $this->hasExportColumn('query_text');
+        $hasLastUsedAt = $this->hasExportColumn('last_used_at');
+
+        if ($hasQueryHash) {
+            $queryHash = hash('sha256', mb_strtolower(trim($sql)));
+            $export = Export::query()->firstOrNew([
+                'query_hash' => $queryHash,
+            ]);
+        } else {
+            // Legacy fallback before migration: use name as query text and update/create by exact query string.
+            $export = Export::query()->firstOrNew([
+                'name' => $sql,
+            ]);
+        }
+
+        $export->name = $hasQueryText ? $name : $sql;
+        if ($hasType) {
+            $export->type = 'sql';
+        }
+        if ($hasQueryText) {
+            $export->query_text = $sql;
+        }
+        if ($hasLastUsedAt) {
+            $export->last_used_at = now();
+        }
+        $export->save();
+
+        return [
+            'id' => (int) $export->id,
+            'name' => (string) $export->name,
+            'query' => (string) ($export->query_text ?: $sql),
+            'last_used_at' => optional($export->last_used_at)->format('Y-m-d H:i:s') ?? '',
+        ];
+    }
+
+    protected function hasExportColumn(string $column): bool
+    {
+        static $columns = null;
+
+        if ($columns === null) {
+            $columns = Schema::getColumnListing((new Export)->getTable());
+        }
+
+        return in_array($column, $columns, true);
+    }
+
+    protected function formatExportLabel(string $columnName): string
+    {
+        $label = Str::of($columnName)
+            ->replace('_', ' ')
+            ->title()
+            ->toString();
+
+        return str_replace(
+            [' Id', ' Sku', ' Upc', ' Msrp', ' Url'],
+            [' ID', ' SKU', ' UPC', ' MSRP', ' URL'],
+            $label
+        );
     }
 }
