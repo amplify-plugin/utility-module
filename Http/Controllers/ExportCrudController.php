@@ -186,10 +186,15 @@ class ExportCrudController extends BackpackCustomCrudController
 
         try {
             $previewSql = 'SELECT * FROM ('.$validation['sql'].') AS export_preview LIMIT '.$limit;
-            $rows = array_map(
-                static fn ($row) => (array) $row,
-                DB::select($previewSql)
-            );
+            $rows = array_map(function ($row) {
+                $rowArray = (array) $row;
+
+                foreach ($rowArray as $key => $value) {
+                    $rowArray[$key] = $this->sanitizeExportString($value);
+                }
+
+                return $rowArray;
+            }, DB::select($previewSql));
 
             $historyItem = $this->saveSqlHistory($validation['sql'], $historyLabel);
 
@@ -252,7 +257,12 @@ class ExportCrudController extends BackpackCustomCrudController
                     $headerWritten = true;
                 }
 
-                fputcsv($output, array_values($row));
+                $sanitizedRow = array_map(
+                    fn ($value) => $this->sanitizeExportString($value),
+                    array_values($row)
+                );
+
+                fputcsv($output, $sanitizedRow);
                 $rowCounter++;
 
                 // Periodically flush output to keep memory usage and buffers low on very large exports.
@@ -665,5 +675,67 @@ class ExportCrudController extends BackpackCustomCrudController
             [' ID', ' SKU', ' UPC', ' MSRP', ' URL'],
             $label
         );
+    }
+
+    protected function sanitizeExportString(mixed $value): string
+    {
+        if ($value === null) {
+            return '';
+        }
+
+        if (is_bool($value)) {
+            return $value ? '1' : '0';
+        }
+
+        if (is_numeric($value)) {
+            return (string) $value;
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d H:i:s');
+        }
+
+        if (is_array($value)) {
+            return $this->flattenTextValue($value);
+        }
+
+        if (is_object($value)) {
+            return $this->flattenTextValue((array) $value);
+        }
+
+        $text = trim((string) $value);
+        if ($text === '') {
+            return '';
+        }
+
+        $decoded = json_decode($text, true);
+        if (json_last_error() === JSON_ERROR_NONE && (is_array($decoded) || is_object($decoded))) {
+            return $this->flattenTextValue((array) $decoded);
+        }
+
+        return $text;
+    }
+
+    protected function flattenTextValue(array $data): string
+    {
+        // Common localization payload shape: {"en":"..."}
+        if (array_key_exists('en', $data) && is_scalar($data['en'])) {
+            return trim((string) $data['en']);
+        }
+
+        $parts = [];
+        foreach ($data as $item) {
+            if (is_array($item)) {
+                $parts[] = $this->flattenTextValue($item);
+            } elseif (is_object($item)) {
+                $parts[] = $this->flattenTextValue((array) $item);
+            } elseif ($item !== null) {
+                $parts[] = trim((string) $item);
+            }
+        }
+
+        $parts = array_values(array_filter($parts, static fn ($part) => $part !== ''));
+
+        return implode(' | ', $parts);
     }
 }
