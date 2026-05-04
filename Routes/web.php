@@ -30,6 +30,7 @@ Route::group([
     Route::post('export/sql/download', 'ExportCrudController@downloadSql')->name('admin.export.sql.download');
     Route::get('export/sql/history', 'ExportCrudController@sqlHistory')->name('admin.export.sql.history');
     Route::delete('export/sql/history/{id}', 'ExportCrudController@deleteSqlHistory')->name('admin.export.sql.history.delete');
+    Route::get('export/sql/schema', 'ExportCrudController@sqlSchema')->name('admin.export.sql.schema');
     Route::crud('scheduled-job', 'ScheduledJobCrudController');
     Route::get('scheduled-job/run-now/{id}', 'ScheduledJobCrudController@runNow');
     Route::crud('backup', 'BackupCrudController');

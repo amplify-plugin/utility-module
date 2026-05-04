@@ -342,6 +342,59 @@ class ExportCrudController extends BackpackCustomCrudController
         ]);
     }
 
+    public function sqlSchema(Request $request): JsonResponse
+    {
+        $databaseName = DB::connection()->getDatabaseName();
+        $selectedTable = trim((string) $request->input('table', ''));
+        $search = trim((string) $request->input('q', ''));
+        $tableLimit = max(1, min(200, (int) $request->input('limit', 50)));
+
+        $tableSql = 'SELECT table_name FROM information_schema.tables WHERE table_schema = ?';
+        $bindings = [$databaseName];
+        if ($search !== '') {
+            $tableSql .= ' AND table_name LIKE ?';
+            $bindings[] = '%'.$search.'%';
+        }
+        $tableSql .= ' ORDER BY table_name ASC LIMIT '.$tableLimit;
+
+        $tables = collect(DB::select($tableSql, $bindings))->map(function ($row) {
+            $values = array_values((array) $row);
+
+            return (string) ($values[0] ?? '');
+        })->filter()->values();
+
+        $columns = collect();
+        if ($selectedTable !== '') {
+            $tableExists = (int) DB::table('information_schema.tables')
+                ->where('table_schema', $databaseName)
+                ->where('table_name', $selectedTable)
+                ->count() > 0;
+
+            if (! $tableExists) {
+                return response()->json([
+                    'tables' => $tables,
+                    'selected_table' => '',
+                    'columns' => [],
+                ]);
+            }
+
+            $columns = collect(DB::select(
+                'SELECT column_name FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ordinal_position ASC',
+                [$databaseName, $selectedTable]
+            ))->map(function ($row) {
+                $values = array_values((array) $row);
+
+                return (string) ($values[0] ?? '');
+            })->filter()->values();
+        }
+
+        return response()->json([
+            'tables' => $tables,
+            'selected_table' => $selectedTable,
+            'columns' => $columns,
+        ]);
+    }
+
     /**
      * @return array<string, array{label: string, selected_by_default?: bool}>
      */
