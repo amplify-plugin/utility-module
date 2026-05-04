@@ -26,6 +26,9 @@ class ExportCrudController extends BackpackCustomCrudController
 {
     use \Backpack\CRUD\app\Http\Controllers\Operations\ListOperation;
 
+    protected const SQL_EXPORT_DEFAULT_LIMIT = 100000;
+    protected const SQL_EXPORT_MAX_LIMIT = 1000000;
+
     /**
      * Configure the CrudPanel object. Apply settings to all operations.
      *
@@ -217,6 +220,8 @@ class ExportCrudController extends BackpackCustomCrudController
     public function downloadSql(Request $request): StreamedResponse
     {
         $rawSql = (string) $request->input('sql', '');
+        $requestedLimit = (int) $request->input('export_limit', self::SQL_EXPORT_DEFAULT_LIMIT);
+        $rowLimit = max(1, min(self::SQL_EXPORT_MAX_LIMIT, $requestedLimit));
 
         $validation = $this->validateSelectSql($rawSql);
         if (! $validation['valid']) {
@@ -224,9 +229,15 @@ class ExportCrudController extends BackpackCustomCrudController
         }
 
         $fileName = 'sql-export-'.now()->format('Y-m-d_His').'.csv';
-        $wrappedSql = 'SELECT * FROM ('.$validation['sql'].') AS export_source';
+        $wrappedSql = 'SELECT * FROM ('.$validation['sql'].') AS export_source LIMIT '.$rowLimit;
 
         return response()->streamDownload(function () use ($wrappedSql) {
+            if (function_exists('set_time_limit')) {
+                @set_time_limit(0);
+            }
+
+            DB::connection()->disableQueryLog();
+
             $output = fopen('php://output', 'w');
             fwrite($output, "\xEF\xBB\xBF");
 
@@ -234,6 +245,7 @@ class ExportCrudController extends BackpackCustomCrudController
             $statement->execute();
 
             $headerWritten = false;
+            $rowCounter = 0;
             while ($row = $statement->fetch(\PDO::FETCH_ASSOC)) {
                 if (! $headerWritten) {
                     fputcsv($output, array_keys($row));
@@ -241,6 +253,12 @@ class ExportCrudController extends BackpackCustomCrudController
                 }
 
                 fputcsv($output, array_values($row));
+                $rowCounter++;
+
+                // Periodically flush output to keep memory usage and buffers low on very large exports.
+                if ($rowCounter % 1000 === 0) {
+                    fflush($output);
+                }
             }
 
             fclose($output);
