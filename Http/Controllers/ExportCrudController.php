@@ -7,12 +7,14 @@ use Amplify\System\Backend\Models\Manufacturer;
 use Amplify\System\Backend\Models\Product;
 use Amplify\System\Utility\Models\Export;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -46,7 +48,7 @@ class ExportCrudController extends BackpackCustomCrudController
      */
     protected function setupListOperation()
     {
-        $this->crud->setListView('backend::pages.exports.product');
+        $this->crud->setListView('backend::pages.exports.workspace');
         $this->data['productExportConditions'] = $this->productExportConditions();
         $this->data['productExportColumns'] = $this->productExportColumns();
         $this->data['manufacturerExportColumns'] = $this->manufacturerExportColumns();
@@ -166,7 +168,8 @@ class ExportCrudController extends BackpackCustomCrudController
     public function previewSql(Request $request): JsonResponse
     {
         $rawSql = (string) $request->input('sql', '');
-        $limit = max(1, min(100, (int) $request->input('limit', 25)));
+        $limit = max(1, min(100, (int) $request->input('limit', 10)));
+        $historyLabel = trim((string) $request->input('label', ''));
 
         $validation = $this->validateSelectSql($rawSql);
         if (! $validation['valid']) {
@@ -185,7 +188,7 @@ class ExportCrudController extends BackpackCustomCrudController
                 DB::select($previewSql)
             );
 
-            $historyItem = $this->saveSqlHistory($validation['sql']);
+            $historyItem = $this->saveSqlHistory($validation['sql'], $historyLabel);
 
             return response()->json([
                 'valid' => true,
@@ -194,6 +197,13 @@ class ExportCrudController extends BackpackCustomCrudController
                 'rows' => $rows,
                 'history' => $historyItem,
             ]);
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'valid' => false,
+                'message' => $exception->getMessage(),
+                'columns' => [],
+                'rows' => [],
+            ], 422);
         } catch (\Throwable $exception) {
             return response()->json([
                 'valid' => false,
@@ -241,7 +251,7 @@ class ExportCrudController extends BackpackCustomCrudController
 
     public function sqlHistory(Request $request): JsonResponse
     {
-        $limit = max(1, min(100, (int) $request->input('limit', 20)));
+        $perPage = max(1, min(100, (int) $request->input('per_page', 4)));
 
         $query = Export::query();
         if ($this->hasExportColumn('type')) {
@@ -260,22 +270,30 @@ class ExportCrudController extends BackpackCustomCrudController
             $selectColumns[] = 'last_used_at';
         }
 
-        $items = $query
+        $paginator = $query
             ->orderByDesc('updated_at')
-            ->limit($limit)
-            ->get($selectColumns)
+            ->paginate($perPage, $selectColumns)
+            ->appends($request->query());
+
+        $items = collect($paginator->items())
             ->map(function (Export $item) {
                 return [
                     'id' => $item->id,
                     'name' => $item->name,
                     'query' => $item->query_text ?: $item->name,
-                    'last_used_at' => optional($item->last_used_at)->format('Y-m-d H:i:s'),
+                    'last_used_at' => $item->last_used_at ? Carbon::parse($item->last_used_at)->diffForHumans() : null,
                 ];
             })
             ->values();
 
         return response()->json([
             'items' => $items,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
         ]);
     }
 
@@ -533,32 +551,55 @@ class ExportCrudController extends BackpackCustomCrudController
     /**
      * @return array{id: int, name: string, query: string, last_used_at: string}
      */
-    protected function saveSqlHistory(string $sql): array
+    protected function saveSqlHistory(string $sql, string $label = ''): array
     {
-        $name = Str::limit(preg_replace('/\s+/', ' ', trim($sql)) ?? 'SQL Query', 120, '...');
+        $providedLabel = trim($label);
+        $normalizedSql = trim($sql);
         $hasQueryHash = $this->hasExportColumn('query_hash');
         $hasType = $this->hasExportColumn('type');
         $hasQueryText = $this->hasExportColumn('query_text');
         $hasLastUsedAt = $this->hasExportColumn('last_used_at');
+        $queryHash = hash('sha256', mb_strtolower($normalizedSql));
 
-        if ($hasQueryHash) {
-            $queryHash = hash('sha256', mb_strtolower(trim($sql)));
-            $export = Export::query()->firstOrNew([
-                'query_hash' => $queryHash,
-            ]);
-        } else {
-            // Legacy fallback before migration: use name as query text and update/create by exact query string.
-            $export = Export::query()->firstOrNew([
-                'name' => $sql,
+        $baseQuery = Export::query();
+        if ($hasType) {
+            $baseQuery->where('type', 'sql');
+        }
+
+        $existingExport = $hasQueryHash
+            ? (clone $baseQuery)->where('query_hash', $queryHash)->first()
+            : ($hasQueryText
+                ? (clone $baseQuery)->where('query_text', $normalizedSql)->first()
+                : null);
+
+        $finalLabel = $providedLabel !== ''
+            ? Str::limit($providedLabel, 120, '...')
+            : ($existingExport?->name ?: $this->generateDefaultHistoryLabel());
+
+        $labelOwner = (clone $baseQuery)
+            ->where('name', $finalLabel)
+            ->first();
+
+        if ($labelOwner && (! $existingExport || (int) $labelOwner->id !== (int) $existingExport->id)) {
+            throw ValidationException::withMessages([
+                'label' => __('Duplicate history label is not allowed. Please use another label.'),
             ]);
         }
 
-        $export->name = $hasQueryText ? $name : $sql;
+        $export = $existingExport ?: new Export;
+
+        $export->name = $finalLabel;
         if ($hasType) {
             $export->type = 'sql';
         }
         if ($hasQueryText) {
-            $export->query_text = $sql;
+            $export->query_text = $normalizedSql;
+        } elseif (! $hasQueryHash) {
+            // Legacy fallback schema: keep query in name when query_text is unavailable.
+            $export->name = $finalLabel.' | '.$normalizedSql;
+        }
+        if ($hasQueryHash) {
+            $export->query_hash = $queryHash;
         }
         if ($hasLastUsedAt) {
             $export->last_used_at = now();
@@ -568,9 +609,19 @@ class ExportCrudController extends BackpackCustomCrudController
         return [
             'id' => (int) $export->id,
             'name' => (string) $export->name,
-            'query' => (string) ($export->query_text ?: $sql),
+            'query' => (string) ($export->query_text ?: $normalizedSql),
             'last_used_at' => optional($export->last_used_at)->format('Y-m-d H:i:s') ?? '',
         ];
+    }
+
+    protected function generateDefaultHistoryLabel(): string
+    {
+        do {
+            $label = 'SQL-'.now()->format('YmdHis').'-'.random_int(100, 999);
+            $exists = Export::query()->where('name', $label)->exists();
+        } while ($exists);
+
+        return $label;
     }
 
     protected function hasExportColumn(string $column): bool
