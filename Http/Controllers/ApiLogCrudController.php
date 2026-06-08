@@ -2,6 +2,7 @@
 
 namespace Amplify\System\Utility\Http\Controllers;
 
+use Amplify\System\Helpers\UtilityHelper;
 use Amplify\System\Utility\Models\ApiLog;
 use Amplify\System\Abstracts\BackpackCustomCrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
@@ -186,7 +187,17 @@ class ApiLogCrudController extends CrudController
         CRUD::column('request_header')->type('json');
         CRUD::column('request_body')->type('json');
         CRUD::column('response_header')->type('json');
-        CRUD::column('response_body')->type('json');
+
+        $model = $this->crud->getCurrentEntry();
+        $response = $model->getAttributeValue('response_body');
+
+        if (UtilityHelper::isJson($response)) {
+            CRUD::column('response_body')->type('json')
+                ->wrapper(['element' => 'pre', 'style' => 'max-width: 78vw !important; max-height: 70vh; display:block; overflow: scroll;']);
+        } else {
+            CRUD::column('response_body')->type('textarea')
+                ->wrapper(['element' => 'pre', 'style' => 'max-width: 78vw !important; max-height: 70vh; display:block; overflow: scroll;']);
+        }
         CRUD::column('created_at');
         CRUD::column('updated_at');
     }
