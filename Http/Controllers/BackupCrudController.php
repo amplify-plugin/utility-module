@@ -16,7 +16,7 @@ use Prologue\Alerts\Facades\Alert;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Class WarehouseCrudController
+ * Class BackupCrudController
  *
  * @property-read \Backpack\CRUD\app\Library\CrudPanel\CrudPanel $crud
  */
