@@ -48,6 +48,13 @@ class CurrencyHelper
                 }
             }
 
+            /**
+             * @Steven Engineering Custom Hook
+             */
+            if ($currency->code == 'USD' && config('amplify.client_code') == 'STV') {
+                return preg_replace('/(\.\d{2})0$/', '$1', $money);
+            }
+
             return $money;
         }
 
