@@ -32,13 +32,26 @@ class MailLogListener
         $subject = $message->getSubject();
         $body = $message->getBody()->toString();
 
-        MailLog::create([
-            'status' => ($event instanceof MessageSent) ? 'sent' : 'sending',
-            'email' => $emails,
-            'subject' => $subject,
-            'body' => $body,
-            'data' => json_encode($event->data),
-        ]);
+        $uniqueId = $message
+            ->getHeaders()
+            ->get('X-Amplify-Mail-Id')
+            ?->getBodyAsString();
+
+        if ($event->message instanceof MessageSending) {
+            MailLog::create([
+                'unique_id' => $uniqueId,
+                'status' => 'sending',
+                'email' => $emails,
+                'subject' => $subject,
+                'body' => $body,
+                'data' => json_encode($event->data),
+            ]);
+        }
+
+        if ($event->message instanceof MessageSent && !empty($uniqueId)) {
+            MailLog::where('unique_id', $uniqueId)->update(['status' => 'sent']);
+        }
+
     }
 
     /**
