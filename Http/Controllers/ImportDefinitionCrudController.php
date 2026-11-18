@@ -266,6 +266,16 @@ class ImportDefinitionCrudController extends BackpackCustomCrudController
                 'type' => 'bigint',
                 'is_required' => false,
             ],
+            [
+                'name' => 'availability_display',
+                'type' => 'varchar(1)',
+                'is_required' => false,
+            ],
+            [
+                'name' => 'price_display',
+                'type' => 'varchar(1)',
+                'is_required' => false,
+            ],
         ];
         $columns = [...$columns, ...$dbColumns];
 
