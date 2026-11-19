@@ -5,8 +5,8 @@ namespace Amplify\System\Utility\Services\Import;
 use Amplify\System\Backend\Models\AttributeProduct;
 use Amplify\System\Backend\Models\Product;
 use Amplify\System\Backend\Models\ProductImage;
-use Amplify\System\Jobs\ProductServiceJob;
 use Amplify\System\Utility\Abstracts\ImportService;
+use Amplify\System\Utility\Jobs\ProductImportJob;
 use Amplify\System\Utility\Models\ImportDefinition;
 use Carbon\Carbon;
 
@@ -33,7 +33,7 @@ class ProductService extends ImportService
         $this->importJobId = $request['import_job_id'];
         $this->userId = $request['user_id'];
         $this->locale = $request['locale'];
-        $this->jobFullName = ProductServiceJob::class;
+        $this->jobFullName = ProductImportJob::class;
 
         parent::__construct($importDefinition, $request);
     }
@@ -58,7 +58,7 @@ class ProductService extends ImportService
                 'importDefinition' => $this->importDefinition,
             ];
 
-            ProductServiceJob::dispatch($data)->delay(Carbon::now()->addSeconds($this->delay));
+            ProductImportJob::dispatch($data)->delay(Carbon::now()->addSeconds($this->delay));
 
             $this->manageImportJobHistory();
         });

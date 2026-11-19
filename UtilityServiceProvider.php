@@ -2,6 +2,8 @@
 
 namespace Amplify\System\Utility;
 
+use Amplify\System\Backend\Models\Product;
+use Amplify\System\Utility\Listeners\ImportedProductFlags;
 use Amplify\System\Utility\Repositories\ImportJobRepository;
 use Amplify\System\Utility\Repositories\Interfaces\ImportJobInterface;
 use Illuminate\Support\ServiceProvider;
@@ -22,6 +24,8 @@ class UtilityServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        Product::observe(ImportedProductFlags::class);
+
         $this->loadRoutesFrom(__DIR__.'/Routes/web.php');
     }
 }
